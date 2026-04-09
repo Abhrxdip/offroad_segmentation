@@ -171,9 +171,12 @@ class YOLOSegmentationModel:
         image_rgb = image.convert("RGB")
         original = np.array(image_rgb)
         
-        # Run YOLO inference
-        results = self.model(image_rgb, conf=self.conf_threshold, verbose=False)
+        # Run YOLO inference with segmentation enabled
+        print(f"[PREDICT] Running inference with confidence threshold: {self.conf_threshold}")
+        results = self.model(image_rgb, conf=self.conf_threshold, verbose=False, task='segment')
         result = results[0]
+        
+        print(f"[PREDICT] Got result - Detections: {len(result.boxes)}, Has masks: {result.masks is not None}")
         
         h, w = original.shape[:2]
         semantic_mask = np.zeros((h, w), dtype=np.uint8)
@@ -183,6 +186,8 @@ class YOLOSegmentationModel:
             masks = result.masks.data.cpu().numpy()
             class_ids = result.boxes.cls.cpu().numpy().astype(int)
             
+            print(f"[PREDICT] Processing {len(masks)} masks")
+            
             for i, (mask, class_id) in enumerate(zip(masks, class_ids)):
                 # Resize mask to original image size
                 mask_resized = cv2.resize(
@@ -191,6 +196,8 @@ class YOLOSegmentationModel:
                     interpolation=cv2.INTER_LINEAR
                 )
                 semantic_mask[mask_resized > 0.5] = class_id
+        else:
+            print("[PREDICT] WARNING: No masks returned from YOLO!")
         
         # Generate visualizations
         color_mask = mask_to_color(semantic_mask, self.color_palette)
@@ -215,16 +222,37 @@ class YOLOSegmentationModel:
         # Sort by coverage (descending)
         coverage.sort(key=lambda x: x[1], reverse=True)
         
-        # Build stats
-        class_stats = [
-            {
+        # Build stats - include ALL classes for transparency
+        class_stats = []
+        for class_id in range(self.num_classes):
+            class_mask = semantic_mask == class_id
+            pixel_count = int(np.sum(class_mask))
+            coverage_pct = float((pixel_count / total_pixels) * 100)
+            
+            # Calculate mean confidence for this class
+            class_confidences = []
+            if len(result.boxes.conf) > 0:
+                for i, pred_class in enumerate(result.boxes.cls):
+                    if int(pred_class.item()) == class_id:
+                        class_confidences.append(float(result.boxes.conf[i].item()))
+            
+            mean_confidence = float(np.mean(class_confidences)) if class_confidences else 0.0
+            
+            # Count separate regions for this class
+            if pixel_count > 0:
+                labeled_regions, region_count_val = cv2.connectedComponents(class_mask.astype(np.uint8))
+                region_count = max(0, int(region_count_val) - 1)  # Subtract 1 for background
+            else:
+                region_count = 0
+            
+            class_stats.append({
                 "class_id": class_id,
                 "class_name": self.class_names[class_id],
-                "pixel_count": int(np.sum(semantic_mask == class_id)),
-                "coverage_percent": float((np.sum(semantic_mask == class_id) / total_pixels) * 100)
-            }
-            for class_id in range(self.num_classes)
-        ]
+                "pixel_count": pixel_count,
+                "coverage_pct": coverage_pct,
+                "mean_confidence": mean_confidence,
+                "region_count": region_count
+            })
         
         # Compute overall confidence
         overall_confidence = float(result.boxes.conf.mean().item()) if len(result.boxes.conf) > 0 else 0.0
@@ -232,13 +260,15 @@ class YOLOSegmentationModel:
         # Compute present classes
         present_classes = int(np.sum(np.array([len(np.where(semantic_mask == i)[0]) for i in range(self.num_classes)]) > 0))
         
+        print(f"[PREDICT] Classes detected: {present_classes}, Overall confidence: {overall_confidence:.2f}")
+        
         return {
             "mask": semantic_mask,
             "color_mask": color_mask,
             "overlay": overlay,
             "coverage": coverage,
             "class_distribution": class_dist,
-            "class_stats": class_stats,
+            "class_stats": class_stats,  # Return all stats, not filtered
             "class_counts": class_counts,
             "class_confidence": {self.class_names[i]: float(overall_confidence) for i in range(self.num_classes)},
             "detections": len(result.boxes),

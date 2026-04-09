@@ -292,11 +292,18 @@ async def predict_endpoint(file: UploadFile = File(...)):
         
         # Store original dimensions
         orig_width, orig_height = image.size
+        print(f"\n[INFERENCE] Processing uploaded image: {file.filename}")
+        print(f"[INFERENCE] Image size: {orig_width}x{orig_height}")
         
         # Run inference
         result = model.predict(image)
         processing_time_ms = (time.perf_counter() - start_time) * 1000.0
         training_metrics = load_live_training_metrics()
+        
+        print(f"[INFERENCE] Result keys: {result.keys()}")
+        print(f"[INFERENCE] Classes with detections: {len([s for s in result.get('class_stats', []) if s.get('pixel_count', 0) > 0])}")
+        print(f"[INFERENCE] Processing time: {processing_time_ms:.1f}ms")
+        
         _print_prediction_report(file.filename or "uploaded_image", result, processing_time_ms)
         
         # Prepare response with base64-encoded images
