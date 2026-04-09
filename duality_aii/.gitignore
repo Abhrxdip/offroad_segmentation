@@ -3,39 +3,78 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.egg-info/
 
 # Virtual environments
 .venv/
+.venv_gpu/
 venv/
 env/
 ENV/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
 
 # Tooling caches
 .pytest_cache/
 .mypy_cache/
 .ipynb_checkpoints/
+.wandb/
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # OS/editor files
 .DS_Store
 Thumbs.db
+*.lnk
 
-# Model and training artifacts
-*.pth
+# Model and training artifacts (except current results)
 *.pt
+!yolov8m-seg.pt
+*.pth
+!segmentation_head.pth
 *.onnx
 train_stats/
+**test_eval*/
 predictions/
 runs/
+runs_old/
 checkpoints/
 logs/
 
 # Dataset and large local assets
 demo_data/
+yolo_dataset/
+complete\ dataset/
 Offroad_Segmentation_Training_Dataset/
 Offroad_Segmentation_testImages/
+
+# Generated configs
+data.yaml
+mask_mapping.json.bak
+
+# Uploads and temp files
+uploads/
+temp/
 
 # Archives
 *.zip
 *.7z
 *.tar
 *.gz
+
+# CSV logs (except final results)
+*.csv
+!evaluation_summary.json
+!yolo_training_results.json

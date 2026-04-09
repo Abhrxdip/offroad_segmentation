@@ -298,15 +298,35 @@ def compute_sample_iou(pred: np.ndarray, target: np.ndarray, num_classes: int) -
     return float(np.mean(ious)) if ious else float("nan")
 
 
+def resolve_default_test_dir(script_dir: Path) -> str:
+    """Resolve test dataset path across common layouts used in this repo."""
+    candidates = [
+        script_dir
+        / "complete dataset"
+        / "Offroad_Segmentation_testImages"
+        / "Offroad_Segmentation_testImages",
+        script_dir / "complete dataset" / "Offroad_Segmentation_testImages",
+        script_dir.parent / "Offroad_Segmentation_testImages",
+        script_dir / ".." / "Offroad_Segmentation_testImages",
+    ]
+
+    for candidate in candidates:
+        if (candidate / "Color_Images").exists() and (candidate / "Segmentation").exists():
+            return str(candidate.resolve())
+
+    return str(candidates[0])
+
+
 def parse_args():
     script_dir = Path(__file__).resolve().parent
+    default_data_dir = resolve_default_test_dir(script_dir)
 
     parser = argparse.ArgumentParser(description="Evaluate segmentation model")
     parser.add_argument("--model_path", type=str, default=str(script_dir / "segmentation_head.pth"))
     parser.add_argument(
         "--data_dir",
         type=str,
-        default=str(script_dir / ".." / "Offroad_Segmentation_testImages"),
+        default=default_data_dir,
     )
     parser.add_argument("--output_dir", type=str, default="./predictions")
     parser.add_argument("--batch_size", type=int, default=2)

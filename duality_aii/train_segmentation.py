@@ -468,19 +468,41 @@ def save_history(history: dict, output_dir: Path, best_epoch: int) -> None:
         json.dump(payload, f, indent=2)
 
 
+def resolve_default_split_dir(script_dir: Path, split: str) -> str:
+    """Resolve train/val defaults across common dataset layouts in this repo."""
+    candidates = [
+        script_dir
+        / "complete dataset"
+        / "Offroad_Segmentation_Training_Dataset"
+        / "Offroad_Segmentation_Training_Dataset"
+        / split,
+        script_dir / "complete dataset" / "Offroad_Segmentation_Training_Dataset" / split,
+        script_dir.parent / "Offroad_Segmentation_Training_Dataset" / split,
+        script_dir / ".." / "Offroad_Segmentation_Training_Dataset" / split,
+    ]
+
+    for candidate in candidates:
+        if (candidate / "Color_Images").exists() and (candidate / "Segmentation").exists():
+            return str(candidate.resolve())
+
+    return str(candidates[0])
+
+
 def parse_args():
     script_dir = Path(__file__).resolve().parent
+    default_train_dir = resolve_default_split_dir(script_dir, "train")
+    default_val_dir = resolve_default_split_dir(script_dir, "val")
 
     parser = argparse.ArgumentParser(description="Train segmentation model")
     parser.add_argument(
         "--train_dir",
         type=str,
-        default=str(script_dir / ".." / "Offroad_Segmentation_Training_Dataset" / "train"),
+        default=default_train_dir,
     )
     parser.add_argument(
         "--val_dir",
         type=str,
-        default=str(script_dir / ".." / "Offroad_Segmentation_Training_Dataset" / "val"),
+        default=default_val_dir,
     )
     parser.add_argument("--output_dir", type=str, default=str(script_dir / "train_stats"))
     parser.add_argument(
@@ -491,7 +513,7 @@ def parse_args():
     )
 
     parser.add_argument("--batch_size", type=int, default=2)
-    parser.add_argument("--epochs", type=int, default=20)
+    parser.add_argument("--epochs", type=int, default=6)
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
     parser.add_argument("--num_workers", type=int, default=0)
@@ -505,7 +527,7 @@ def parse_args():
     )
     parser.add_argument("--optimizer", type=str, default="adamw", choices=["adamw", "sgd"])
     parser.add_argument("--scheduler", type=str, default="cosine", choices=["cosine", "none"])
-    parser.add_argument("--early_stop_patience", type=int, default=8)
+    parser.add_argument("--early_stop_patience", type=int, default=3)
     parser.add_argument("--amp", type=int, default=1, choices=[0, 1])
 
     parser.add_argument(

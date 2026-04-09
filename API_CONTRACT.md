@@ -453,7 +453,7 @@ When the civic backend is integrated, replace the API URL and ensure the followi
 
 ### Frontend Configuration for civic Backend
 
-Update the `.env` file in `frontend_da/`:
+Update the `.env` file in `segvision-ui/`:
 
 ```bash
 # For local ML API (current)
@@ -489,61 +489,61 @@ VITE_API_BASE=https://civic-backend.example.com/api/v1
 ### Frontend to Local API (Current)
 
 ```
-┌─────────────┐
-│   Frontend  │
-│ React/Vite  │
-└──────┬──────┘
-       │
-       │ POST /predict
-       │ (multipart/form-data)
-       │
-       ▼
-┌──────────────────────┐
-│  Local FastAPI      │
-│  (inference_server) │
-│  http://localhost:8000
-└──────┬───────────────┘
-       │
-       │ Load model (once)
-       │ Load image
-       │ Run inference
-       │ Return base64 images
-       │
-       ▼
-┌──────────────────────┐
-│   ML Model          │
-│  (DINOv2 +          │
-│   ConvNeXt Head)    │
-└─────────────────────┘
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé   Frontend  Γöé
+Γöé React/Vite  Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+       Γöé
+       Γöé POST /predict
+       Γöé (multipart/form-data)
+       Γöé
+       Γû╝
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé  Local FastAPI      Γöé
+Γöé  (inference_server) Γöé
+Γöé  http://localhost:8000
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+       Γöé
+       Γöé Load model (once)
+       Γöé Load image
+       Γöé Run inference
+       Γöé Return base64 images
+       Γöé
+       Γû╝
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé   ML Model          Γöé
+Γöé  (DINOv2 +          Γöé
+Γöé   ConvNeXt Head)    Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
 ```
 
 ### Frontend to Future civic Backend
 
 ```
-┌─────────────┐
-│   Frontend  │
-│ React/Vite  │
-└──────┬──────┘
-       │
-       │ POST /predict
-       │ (same contract!)
-       │
-       ▼
-┌──────────────────────┐
-│  civic Backend       │
-│  (Future)            │
-│ https://civic-api... │
-└──────┬───────────────┘
-       │
-       │ May use different ML
-       │ infrastructure
-       │ (same response format)
-       │
-       ▼
-┌──────────────────────┐
-│   ML Infrastructure │
-│  (May vary)          │
-└─────────────────────┘
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé   Frontend  Γöé
+Γöé React/Vite  Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+       Γöé
+       Γöé POST /predict
+       Γöé (same contract!)
+       Γöé
+       Γû╝
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé  civic Backend       Γöé
+Γöé  (Future)            Γöé
+Γöé https://civic-api... Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+       Γöé
+       Γöé May use different ML
+       Γöé infrastructure
+       Γöé (same response format)
+       Γöé
+       Γû╝
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé   ML Infrastructure Γöé
+Γöé  (May vary)          Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
 ```
 
 **Key Point:** Frontend code doesn't change! Only the `VITE_API_BASE` environment variable changes.

@@ -1,23 +1,23 @@
 # Quick Reference - ML Integration
 
-## 📋 Files Created/Updated
+## ≡ƒôï Files Created/Updated
 
 | File | Purpose | Type |
 |------|---------|------|
 | `duality_aii/predict.py` | ML wrapper module | Core |
 | `duality_aii/inference_server.py` | FastAPI server | Core |
 | `duality_aii/example_backend_usage.py` | Backend examples | Documentation |
-| `frontend_da/src/api/segmentationAPI.js` | API client | Core |
-| `frontend_da/src/components/ExampleUsage.jsx` | Frontend examples | Documentation |
+| `segvision-ui/src/api/segmentationAPI.js` | API client | Core |
+| `segvision-ui/src/components/ExampleUsage.jsx` | Frontend examples | Documentation |
 | `API_CONTRACT.md` | API specification | Documentation |
 | `INTEGRATION_GUIDE.md` | Setup instructions | Documentation |
 | `IMPLEMENTATION_SUMMARY.md` | Overview | Documentation |
 | `duality_aii/.env.example` | Backend config | Configuration |
-| `frontend_da/.env.example` | Frontend config | Configuration |
+| `segvision-ui/.env.example` | Frontend config | Configuration |
 
 ---
 
-## 🚀 Quick Start (5 minutes)
+## ≡ƒÜÇ Quick Start (5 minutes)
 
 ### Terminal 1: Backend
 ```bash
@@ -27,7 +27,7 @@ python -m uvicorn inference_server:app --port 8000
 
 ### Terminal 2: Frontend
 ```bash
-cd frontend_da
+cd segvision-ui
 npm install  # First time only
 npm run dev
 ```
@@ -42,7 +42,7 @@ Then visit: http://localhost:5173
 
 ---
 
-## 🔌 API Endpoints
+## ≡ƒöî API Endpoints
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
@@ -53,7 +53,7 @@ Then visit: http://localhost:5173
 
 ---
 
-## 📦 Dependencies
+## ≡ƒôª Dependencies
 
 ### Backend
 ```
@@ -74,7 +74,7 @@ react      (already in package.json)
 
 ---
 
-## 🔓 For Civic Backend Integration
+## ≡ƒöô For Civic Backend Integration
 
 **Only 1 line needs to change:**
 
@@ -92,7 +92,7 @@ VITE_API_BASE=https://civic-api.example.com/api/v1
 
 ---
 
-## 📝 Response Format
+## ≡ƒô¥ Response Format
 
 All `/predict` endpoints return:
 
@@ -115,7 +115,7 @@ All `/predict` endpoints return:
 
 ---
 
-## 🐛 Debugging
+## ≡ƒÉ¢ Debugging
 
 ### API Not Running?
 ```bash
@@ -126,7 +126,7 @@ curl http://localhost:8000/health
 ### Frontend Can't Reach API?
 ```bash
 # Check .env.local
-cat frontend_da/.env.local | grep VITE_API_BASE
+cat segvision-ui/.env.local | grep VITE_API_BASE
 
 # Should be: VITE_API_BASE=http://localhost:8000
 ```
@@ -141,7 +141,7 @@ cat duality_aii/.env.local | grep MODEL_CHECKPOINT
 
 ---
 
-## 📚 Documentation
+## ≡ƒôÜ Documentation
 
 - **API Details:** See `API_CONTRACT.md`
 - **Setup Help:** See `INTEGRATION_GUIDE.md`
@@ -150,7 +150,7 @@ cat duality_aii/.env.local | grep MODEL_CHECKPOINT
 
 ---
 
-## 💡 Common Tasks
+## ≡ƒÆí Common Tasks
 
 ### Test Single Image
 ```bash
@@ -183,7 +183,7 @@ VITE_API_BASE=https://civic-api.example.com npm run dev
 
 ---
 
-## ✅ Checklist
+## Γ£à Checklist
 
 - [ ] Backend runs: `python -m uvicorn inference_server:app --port 8000`
 - [ ] Frontend runs: `npm run dev` (port 5173)
@@ -197,7 +197,7 @@ VITE_API_BASE=https://civic-api.example.com npm run dev
 
 ---
 
-## 🎯 When Civic Backend Is Ready
+## ≡ƒÄ» When Civic Backend Is Ready
 
 1. **Civic team:** Implement endpoints following `API_CONTRACT.md`
 2. **You:** Update `VITE_API_BASE` in `.env.local`
@@ -206,7 +206,7 @@ VITE_API_BASE=https://civic-api.example.com npm run dev
 
 ---
 
-## 📞 Need Help?
+## ≡ƒô₧ Need Help?
 
 1. Check the relevant documentation file
 2. Run example code files
@@ -216,4 +216,4 @@ VITE_API_BASE=https://civic-api.example.com npm run dev
 
 ---
 
-**Everything is production-ready. You're all set!** ✨
+**Everything is production-ready. You're all set!** Γ£¿

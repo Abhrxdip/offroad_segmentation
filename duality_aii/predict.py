@@ -60,6 +60,7 @@ class SegmentationHeadConvNeXt(nn.Module):
     """
     ConvNeXt-based segmentation head for DINOv2 features.
     Processes patch tokens and upsamples to full resolution predictions.
+    Module names match the training script (stem / block / classifier).
     """
     def __init__(self, in_channels: int, out_channels: int, token_w: int, token_h: int):
         super().__init__()
@@ -85,6 +86,29 @@ class SegmentationHeadConvNeXt(nn.Module):
         x = self.stem(x)
         x = self.block(x)
         return self.classifier(x)
+
+
+def normalize_checkpoint_keys(state: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize legacy/alternate checkpoint keys to the training key scheme.
+
+    Supported incoming variants:
+    - block/classifier (current training script)
+    - blk/cls (alternate naming)
+    """
+    if not isinstance(state, dict):
+        return state
+
+    converted = {}
+    for key, value in state.items():
+        if key.startswith("blk."):
+            converted[f"block.{key[4:]}"] = value
+        elif key.startswith("cls."):
+            converted[f"classifier.{key[4:]}"] = value
+        else:
+            converted[key] = value
+
+    return converted
 
 
 # ============================================================================
@@ -180,15 +204,22 @@ class SegmentationModel:
         self.backbone = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14").to(self.device).eval()
         
         # Load segmentation head
-        state = torch.load(checkpoint_path, map_location=self.device)
-        if "classifier.weight" not in state:
-            raise ValueError("Checkpoint missing classifier.weight. Expected segmentation head state dict.")
+        state = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+        if "classifier.weight" in state:
+            self.out_channels = int(state["classifier.weight"].shape[0])
+        elif "cls.weight" in state:
+            self.out_channels = int(state["cls.weight"].shape[0])
+        else:
+            raise ValueError(
+                "Checkpoint missing expected weight key ('cls.weight' or 'classifier.weight'). "
+                f"Found keys: {list(state.keys())}"
+            )
+
+        state = normalize_checkpoint_keys(state)
         
-        self.out_channels = int(state["classifier.weight"].shape[0])
-        
-        # Compute token geometry (must match training)
-        self.h = int(((960 / 2) // 14) * 14)
+        # Compute token geometry (must match training script defaults)
         self.w = int(((960 / 2) // 14) * 14)
+        self.h = int(((540 / 2) // 14) * 14)
         
         # Infer embedding dimension
         dummy = torch.zeros(1, 3, self.h, self.w).to(self.device)
@@ -232,7 +263,11 @@ class SegmentationModel:
                 "color_mask": np.ndarray (h, w, 3) - RGB visualization,
                 "overlay": np.ndarray (h, w, 3) - blended with original,
                 "coverage": List[(class_name, percentage), ...],
-                "class_distribution": {class_name: percentage, ...}
+                "class_distribution": {class_name: percentage, ...},
+                "class_stats": List[dict],
+                "class_counts": {class_name: pixel_count, ...},
+                "class_confidence": {class_name: mean_confidence_pct, ...},
+                "overall_confidence": float,
             }
         """
         # Convert to RGB if needed
@@ -246,7 +281,10 @@ class SegmentationModel:
             feats = self.backbone.forward_features(tensor)["x_norm_patchtokens"]
             logits = self.head(feats)
             logits = F.interpolate(logits, size=(self.h, self.w), mode="bilinear", align_corners=False)
-            pred = torch.argmax(logits, dim=1).squeeze(0).cpu().numpy().astype(np.uint8)
+            probs = torch.softmax(logits, dim=1)
+            max_probs, pred_tensor = torch.max(probs, dim=1)
+            pred = pred_tensor.squeeze(0).cpu().numpy().astype(np.uint8)
+            pred_confidence = max_probs.squeeze(0).cpu().numpy().astype(np.float32)
         
         # Generate visualizations
         color_mask = mask_to_color(pred, self.color_palette)
@@ -260,13 +298,39 @@ class SegmentationModel:
         # Compute class coverage statistics
         coverage = []
         class_dist = {}
+        class_counts = {}
+        class_conf = {}
+        class_stats = []
         total_pixels = pred.size
+        overall_confidence = float(pred_confidence.mean() * 100.0)
         
         for class_id, class_name in enumerate(self.class_names):
-            ratio = float((pred == class_id).sum()) / float(total_pixels)
+            class_mask = pred == class_id
+            pixel_count = int(class_mask.sum())
+            ratio = float(pixel_count) / float(total_pixels)
             percentage = ratio * 100.0
+
+            if pixel_count > 0:
+                mean_confidence = float(pred_confidence[class_mask].mean() * 100.0)
+                region_count = int(max(cv2.connectedComponents(class_mask.astype(np.uint8))[0] - 1, 0))
+            else:
+                mean_confidence = 0.0
+                region_count = 0
+
             coverage.append((class_name, percentage))
             class_dist[class_name] = percentage
+            class_counts[class_name] = pixel_count
+            class_conf[class_name] = mean_confidence
+            class_stats.append(
+                {
+                    "class_id": int(class_id),
+                    "class_name": str(class_name),
+                    "pixel_count": int(pixel_count),
+                    "coverage_pct": float(percentage),
+                    "mean_confidence": float(mean_confidence),
+                    "region_count": int(region_count),
+                }
+            )
         
         return {
             "mask": pred,
@@ -274,6 +338,12 @@ class SegmentationModel:
             "overlay": overlay,
             "coverage": coverage,
             "class_distribution": class_dist,
+            "class_counts": class_counts,
+            "class_confidence": class_conf,
+            "class_stats": class_stats,
+            "overall_confidence": overall_confidence,
+            "present_classes": int(sum(1 for item in class_stats if item["pixel_count"] > 0)),
+            "total_pixels": int(total_pixels),
         }
     
     @staticmethod
